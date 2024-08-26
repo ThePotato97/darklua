@@ -50,7 +50,7 @@ impl Parser {
 
 #[derive(Clone, Debug)]
 enum ParserErrorKind {
-    Parsing(full_moon::Error),
+    Parsing(Vec<full_moon::Error>),  // Changed to Vec<full_moon::Error>
     Converting(ConvertError),
 }
 
@@ -60,15 +60,15 @@ pub struct ParserError {
 }
 
 impl ParserError {
-    fn parsing(err: full_moon::Error) -> Self {
+    fn parsing(err: Vec<full_moon::Error>) -> Self {
         Self {
-            kind: ParserErrorKind::Parsing(err).into(),
+            kind: Box::new(ParserErrorKind::Parsing(err)),
         }
     }
 
     fn converting(err: ConvertError) -> Self {
         Self {
-            kind: ParserErrorKind::Converting(err).into(),
+            kind: Box::new(ParserErrorKind::Converting(err)),
         }
     }
 }
@@ -76,7 +76,10 @@ impl ParserError {
 impl fmt::Display for ParserError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &*self.kind {
-            ParserErrorKind::Parsing(err) => write!(f, "{}", err),
+            ParserErrorKind::Parsing(errors) => {
+                // Use Debug formatting for the entire vector of errors
+                write!(f, "Parsing errors: {:?}", errors)
+            },
             ParserErrorKind::Converting(err) => write!(f, "{}", err),
         }
     }
